@@ -25,24 +25,35 @@ def transcribe_audio(audio_file_path):
         )
     return transcript.text
 
-def analyze_consultation(transcribed_text):
+def analyze_consultation(transcribed_text, patient_history):
     """
     Envoie le texte brut à GPT-4o-mini pour générer le compte-rendu structuré.
     """
     print("🧠 Analyse médicale en cours...")
     
-    system_prompt = """
+    system_prompt = f"""
     Tu es un assistant médical expert pour les cabines Tessan.
     Ton rôle est de transformer une transcription brute de consultation en un compte-rendu médical structuré au format JSON.
     
-    Structure attendue :
+    CONTEXTE PATIENT (Anamnèse récupérée avant la consultation) :
+    {patient_history}
+
+    TA TÂCHE :
+    1. Synthétiser la consultation (Motif, Histoire, Examen, Plan).
+    2. COMPARER le traitement proposé avec le CONTEXTE PATIENT pour détecter des contre-indications (Allergies, Grossesse, interactions).
+
+    STRUCTURE ATTENDUE :
     - motif_consultation (String)
     - histoire_maladie (String : résumé chronologique)
     - constantes_vitales (String : si mentionnées, sinon "Non mesuré")
     - diagnostic_suspecte (String)
     - plan_traitement (String : médicaments et conseils)
+
+    ALERTE SÉCURITÉ (OBLIGATOIRE):
+    - Si tout est OK, écris : "✅ Aucune contre-indication détectée."
+    - Si risque détecté (ex: allergie ignorée), écris en GRAS et ROUGE : "🛑 ATTENTION : [Détail du risque]"
     
-    Règles :
+    REGLES :
     - Ignore les politesses ("Bonjour", "Au revoir").
     - Sois précis et utilise un vocabulaire médical professionnel (ex: dire "Rhinorrhée" au lieu de "nez qui coule").
     - Si une information est absente, indique "Non mentionné".
