@@ -3,6 +3,24 @@ import os
 import json
 from utils import transcribe_audio, analyze_consultation
 
+@st.dialog("Confirmation Médicale Requise")
+def validation_dialog():
+    st.write("Vous êtes sur le point d'envoyer ce document vers le Dossier Médical Partagé (DMP).")
+    
+    # Message d'avertissement clair
+    st.warning("⚠️ Rappel : L'IA est une aide à la rédaction. En tant que médecin, vous êtes seul responsable du diagnostic et de la prescription.")
+    
+    # Case à cocher obligatoire
+    confirmation = st.checkbox("Je certifie avoir relu et validé l'intégralité du contenu généré.")
+    
+    if st.button("Confirmer l'envoi", type="primary"):
+        if confirmation:
+            st.session_state['dmp_sent'] = True # On stocke l'état pour afficher le toast après fermeture
+            st.rerun() # On recharge la page pour fermer la modale
+        else:
+            st.error("Veuillez cocher la case pour confirmer la relecture.")
+
+
 st.set_page_config(page_title="Tessan Scribe PoC", page_icon="🩺", layout="wide")
 
 # CSS
@@ -88,6 +106,11 @@ st.divider()
 st.subheader("1. Consultation Audio")
 audio_file = st.file_uploader("Source Audio", type=["mp3", "wav", "m4a"])
 
+# On test si l'analyse a déjà été faite
+if 'analysis_complete' not in st.session_state:
+        st.session_state['analysis_complete'] = False
+        st.session_state['summary'] = ""
+
 if audio_file is not None:
     st.audio(audio_file)
     
@@ -111,26 +134,43 @@ if audio_file is not None:
             with col2:
                 st.success("🛡️ Analyse & Sécurité (GPT-4)")
                 with st.spinner("Vérification des interactions médicamenteuses..."):
-                    # On envoie le texte + l'anamnèse de la sidebar
-                    medical_summary = analyze_consultation(raw_text, anamnese_text)
+                    # génération du compte-rendu avec la transcription et l'anamnèse
+                    st.session_state["summary"] = analyze_consultation(raw_text, anamnese_text)
                 
                 # Zone éditable pour le médecin (Human-in-the-loop)
                 final_report = st.text_area(
                     "Validez ou modifiez le compte-rendu :", 
-                    value=medical_summary, 
+                    value=st.session_state["summary"], 
                     height=400
                 )
-                
-                # Logique de détection visuelle de danger
-                if "ATTENTION" in final_report in final_report:
-                    st.error("⚠️ ALERTE : L'IA a détecté un risque potentiel !")
 
-                if "VIGILANCE" in final_report in final_report:
-                    st.error("⚠️ VIGILANCE : L'IA a détecté une incohérence potentiel !")
-                
-                if st.button("✅ Valider et Envoyer au DMP"):
-                    st.toast("Compte-rendu validé et archivé !", icon="🎉")
-                    # Ici, on enverrait 'final_report' (la version modifiée) à la base de données
-                    
+                st.session_state['analysis_complete'] = True
+
         except Exception as e:
             st.error(f"Erreur : {e}")
+
+
+if st.session_state['analysis_complete']:
+    # Logique de détection visuelle de danger
+    if "ATTENTION" in st.session_state["summary"]:
+        st.error("🛑 ALERTE : L'IA a détecté un risque potentiel !")
+
+    if "VIGILANCE" in st.session_state['summary']:
+        st.error("⚠️ VIGILANCE : L'IA a détecté une incohérence potentiel !")
+
+    else:
+        st.success("✅ Aucune contre-indication ou incohérence détectée")
+
+    st.write("")
+    
+    if st.button("Valider et envoyer au DMP", use_container_width=True):
+                    validation_dialog()
+                    
+
+# C. GESTION DU FEEDBACK APRÈS FERMETURE DE LA POP-UP
+if 'dmp_sent' in st.session_state and st.session_state['dmp_sent']:
+    st.toast("✅ Compte-rendu validé, signé et archivé dans le DMP !", icon="🚀")
+    # On remet à False pour ne pas réafficher le toast au prochain clic
+    st.session_state['dmp_sent'] = False
+    st.session_state['summary'] = ""
+    st.session_state['analysis_complete'] = False
