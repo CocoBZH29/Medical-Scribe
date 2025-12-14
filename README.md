@@ -31,4 +31,7 @@ L'application écoute la consultation en temps réel (ou via un fichier audio), 
 
 ---
 
+## Lancement du streamlit
+* Depuis un terminal lancer la commande `streamlit run .\app.py`
+
 👤 Auteur : [Corentin] [Le Gall]
