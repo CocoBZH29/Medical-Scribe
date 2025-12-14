@@ -21,15 +21,45 @@ def validation_dialog():
             st.error("Veuillez cocher la case pour confirmer la relecture.")
 
 
-st.set_page_config(page_title="Tessan Scribe PoC", page_icon="🩺", layout="wide")
+st.set_page_config(page_title="Tessan Scribe PoC", 
+                   page_icon="./assests/img/onglet_tessan.png", 
+                   layout="wide")
 
 # CSS
+# --- 2. CSS PERSONNALISÉ (STYLE TESSAN) ---
 st.markdown("""
 <style>
-    .main { background-color: #f5f7f9; }
-    h1 { color: #004e98; }
-    .stButton button { background-color: #004e98; color: white; }
-    .stTextArea textarea { background-color: #ffffff; border: 1px solid #ddd; }
+    /* 1. Fond de la page principale */
+    .main {
+        background-color: #f8f9fa;
+    }
+
+    /* 2. Titres en Bleu Tessan */
+    h1, h2, h3 {
+        color: #009EE2; 
+    }
+
+    /* 3. Boutons */
+    .stButton button {
+        background-color: #009EE2;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: bold;
+    }
+    .stButton button:hover {
+        background-color: #007bb0;
+        color: white;
+    }
+
+    /* 4. Sidebar */
+    [data-testid="stSidebar"] {
+        background-color: #FEF9D3
+    }
+
+    /* Cacher les menus Streamlit inutiles */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
 </style>
 """, unsafe_allow_html=True)
 
@@ -61,9 +91,8 @@ PATIENT_PROFILES = {
 
 # --- SIDEBAR : Simulation des données cabine (Anamnèse) ---
 with st.sidebar:
-    st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/8/81/Parc_des_Princes_logo.svg/1200px-Parc_des_Princes_logo.svg.png", width=50) 
+    st.image('./assets/img/logo_tessan.png', width=200)
     st.header("📂 Dossier Patient")
-    st.info("Données récupérées automatiquement par la cabine avant la consultation.")
     
     # 1. Le Sélecteur (Radio Button)
     selected_persona_name = st.radio(
@@ -99,8 +128,25 @@ with st.sidebar:
     anamnese_text = json.dumps(current_profile, indent=2, ensure_ascii=False)
 
 # --- PAGE PRINCIPALE ---
-st.title("Assistant de Consultation Intelligent")
+st.markdown("""
+    <div style="
+        background-color: #12493C;
+        padding: 15px 20px;
+        border-radius: 10px;
+        margin-bottom: 10px;
+    ">
+        <h1 style="
+            color: white;
+            margin: 0;
+            padding: 0;
+            font-size: 36px;
+        ">
+            Assistant de Consultation Intelligent
+        </h1>
+    </div>
+    """, unsafe_allow_html=True)
 st.caption("v2.0 - Projet pour entretien TESSAN")
+
 st.divider()
 
 st.subheader("1. Consultation Audio")
