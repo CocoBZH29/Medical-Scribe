@@ -26,7 +26,6 @@ st.set_page_config(page_title="Tessan Scribe PoC",
                    layout="wide")
 
 # CSS
-# --- 2. CSS PERSONNALISÉ (STYLE TESSAN) ---
 st.markdown("""
 <style>
     /* 1. Fond de la page principale */
@@ -34,7 +33,7 @@ st.markdown("""
         background-color: #f8f9fa;
     }
 
-    /* 2. Titres en Bleu Tessan */
+    /* 2. Titres */
     h1, h2, h3 {
         color: #009EE2; 
     }
@@ -70,7 +69,7 @@ PATIENT_PROFILES = {
         "Age": "34 ans",
         "Profession": "Comptable",
         "Motif Principal": "Toux sèche et nez bouché", # Oublie du mal de tête pour tester la détection d'incohérences
-        "HMA": "Depuis 1 semaine, douleurs: 5/10",
+        "HMA": "Depuis 1 semaine",
         "Antécédents": "Asthme léger",
         "Allergies": "Aucune",
         "Traitement en cours": "Ventoline si besoin",
@@ -94,7 +93,7 @@ with st.sidebar:
     st.image('./assets/img/logo_tessan.png', width=200)
     st.header("📂 Dossier Patient")
     
-    # 1. Le Sélecteur (Radio Button)
+    # 1. Le Sélecteur 
     selected_persona_name = st.radio(
         "Patient détecté :",
         options=list(PATIENT_PROFILES.keys())
@@ -103,7 +102,7 @@ with st.sidebar:
     # 2. Récupération des données du profil choisi
     current_profile = PATIENT_PROFILES[selected_persona_name]
 
-    # 3. Affichage des détails (Déroulant)
+    # 3. Affichage des détails 
     st.divider()
     st.subheader(f"👤 {current_profile['Identité']}")
     
@@ -184,11 +183,30 @@ if audio_file is not None:
                     st.session_state["summary"] = analyze_consultation(raw_text, anamnese_text)
                 
                 # Zone éditable pour le médecin (Human-in-the-loop)
-                final_report = st.text_area(
-                    "Validez ou modifiez le compte-rendu :", 
-                    value=st.session_state["summary"], 
-                    height=400
-                )
+                st.write("📝 **Édition du Compte-Rendu**")
+                
+                with st.form("medical_form"):
+                    
+                    data = st.session_state['summary']
+                    # On décompose le JSON en champs séparés
+                    motif_val = st.text_input("Motif de consultation", value=data['compte_rendu']['motif_consultation'])
+                    histoire_val = st.text_area("Histoire de la maladie", value=data['compte_rendu']['histoire_maladie_actuelle'], height=100)
+                    exam_val = st.text_area("Examen Clinique", value=data['compte_rendu']['examen_clinique'])
+                    diag_val = st.text_input("Diagnostic", value=data['compte_rendu']['diagnostic'])
+                    plan_val = st.text_area("Plan de Traitement", value=data['compte_rendu']['plan_traitement'], height=120)
+
+                    # Reconstitution du rapport final pour le DMP
+                    final_report_str = f"""
+                    **MOTIF CONSULTATION:** {motif_val}
+                    **HISTOIRE MALADIE ACTUELLE:** {histoire_val}
+                    **EXAMEN CLINIQUE:** {exam_val}
+                    **DIAGNOSTIC:** {diag_val}
+                    **PLAN TRAITEMENT:** {plan_val}
+                    """
+                    
+                    submitted = st.form_submit_button("Pré-valider les modifications")
+                    if submitted:
+                        st.success("Modifications prises en compte pour la validation finale.")
 
                 st.session_state['analysis_complete'] = True
 
@@ -198,14 +216,21 @@ if audio_file is not None:
 
 if st.session_state['analysis_complete']:
     # Logique de détection visuelle de danger
-    if "ATTENTION" in st.session_state["summary"]:
-        st.error("🛑 ALERTE : L'IA a détecté un risque potentiel !")
-
-    if "VIGILANCE" in st.session_state['summary']:
-        st.error("⚠️ VIGILANCE : L'IA a détecté une incohérence potentiel !")
-
+    data = st.session_state['summary']
+    alerts = []
+    if data['securite']['alerte_aberration'] != "NON":
+        alerts.append(f"📉 **Valeur Aberrante :** {data['securite']['alerte_aberration']}")
+    if data['securite']['alerte_contre_indication'] != "NON":
+        alerts.append(f"💊 **Contre-indication :** {data['securite']['alerte_contre_indication']}")
+    if data['securite']['alerte_incoherence'] != "NON":
+        alerts.append(f"⚠️ **Incohérence :** {data['securite']['alerte_incoherence']}")
+    
+    if alerts:
+        st.error("🚨 **ALERTES SÉCURITÉ DÉTECTÉES**")
+        for alert in alerts:
+            st.markdown(f"- {alert}")
     else:
-        st.success("✅ Aucune contre-indication ou incohérence détectée")
+        st.success("✅ Aucune anomalie physiologique ou médicamenteuse détectée.")
 
     st.write("")
     
