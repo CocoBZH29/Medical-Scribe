@@ -1,0 +1,9 @@
+# Environnement virtuel (trop lourd, pas besoin sur github)
+venv/
+
+# Clés secrètes (NE JAMAIS PUBLIER ÇA)
+.env
+
+# Fichiers cache de Python (inutiles)
+__pycache__/
+*.pyc
