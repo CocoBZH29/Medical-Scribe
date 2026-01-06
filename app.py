@@ -22,7 +22,7 @@ def validation_dialog():
 
 
 st.set_page_config(page_title="Tessan Scribe PoC", 
-                   page_icon="./assests/img/onglet_tessan.png", 
+                   page_icon="./assests/img/onglet_nabla.png", 
                    layout="wide")
 
 # CSS
@@ -90,7 +90,7 @@ PATIENT_PROFILES = {
 
 # --- SIDEBAR : Simulation des données cabine (Anamnèse) ---
 with st.sidebar:
-    st.image('./assets/img/logo_tessan.png', width=200)
+    st.image('./assets/img/logo_nabla.png', width=200)
     st.header("📂 Dossier Patient")
     
     # 1. Le Sélecteur 
@@ -144,7 +144,7 @@ st.markdown("""
         </h1>
     </div>
     """, unsafe_allow_html=True)
-st.caption("v2.0 - Projet pour entretien TESSAN")
+st.caption("v2.0 - Projet pour entretien NABLA")
 
 st.divider()
 
